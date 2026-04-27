@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Obra</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0e0c;
+            --surface: #1a1916;
+            --card: #211f1b;
+            --border: #2e2c27;
+            --gold: #c9a84c;
+            --gold-light: #e8c97a;
+            --rust: #b85c38;
+            --cream: #f0ead8;
+            --text: #d4cfc4;
+            --muted: #7a7568;
+            --success: #5a8a5a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(201,168,76,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse 60% 40% at 80% 90%, rgba(184,92,56,0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 48px 0 40px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 48px;
+        }
+
+        .header-eyebrow {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(32px, 5vw, 52px);
+            font-weight: 900;
+            color: var(--cream);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+
+        h1 span {
+            color: var(--gold);
+        }
+
+        .header-sub {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 40px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 9px;
+            background: transparent;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            letter-spacing: 0.01em;
+        }
+
+        .tab.active {
+            background: var(--gold);
+            color: #0f0e0c;
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--cream);
+            background: var(--border);
+        }
+
+        /* Panels */
+        .panel { display: none; }
+        .panel.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Section label */
+        .section-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            color: var(--cream);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 20px;
+            background: var(--gold);
+            border-radius: 2px;
+        }
+
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        @media (max-width: 600px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        /* Form fields */
+        .field { display: flex; flex-direction: column; gap: 6px; }
+
+        label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        input {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--cream);
+            font-family: 'DM Mono', monospace;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        input:focus { border-color: var(--gold); }
+        input::placeholder { color: var(--muted); opacity: 0.5; }
+
+        /* Arestas list */
+        .arestas-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+
+        .aresta-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .aresta-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .aresta-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: var(--gold);
+            letter-spacing: 0.1em;
+        }
+
+        .btn-remove {
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--rust);
+            cursor: pointer;
+            padding: 4px 10px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-remove:hover { background: var(--rust); color: white; border-color: var(--rust); }
+
+        /* Checkbox row */
+        .checkbox-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--muted);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 500;
+        }
+
+        .checkbox-label input[type=checkbox] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--gold);
+            cursor: pointer;
+        }
+
+        .abertura-fields {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .abertura-fields.visible { display: grid; }
+
+        /* Buttons */
+        .btn-add {
+            background: transparent;
+            border: 1px dashed var(--gold);
+            border-radius: 10px;
+            color: var(--gold);
+            cursor: pointer;
+            padding: 12px;
+            font-size: 13px;
+            font-family: 'DM Sans', sans-serif;
+            width: 100%;
+            transition: all 0.2s;
+            margin-top: 4px;
+        }
+
+        .btn-add:hover { background: rgba(201,168,76,0.08); }
+
+        .btn-calc {
+            background: var(--gold);
+            border: none;
+            border-radius: 10px;
+            color: #0f0e0c;
+            cursor: pointer;
+            padding: 16px 32px;
+            font-size: 15px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 24px;
+            letter-spacing: 0.02em;
+            transition: all 0.2s;
+        }
+
+        .btn-calc:hover { background: var(--gold-light); transform: translateY(-1px); }
+        .btn-calc:active { transform: translateY(0); }
+
+        /* Result */
+        .result {
+            display: none;
+            margin-top: 28px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .result.visible { display: block; }
+
+        .result-hero {
+            background: linear-gradient(135deg, rgba(201,168,76,0.12), rgba(201,168,76,0.04));
+            border: 1px solid rgba(201,168,76,0.3);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            color: var(--gold);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 52px;
+            font-weight: 900;
+            color: var(--cream);
+            line-height: 1;
+        }
+
+        .result-unit {
+            font-family: 'DM Mono', monospace;
+            font-size: 16px;
+            color: var(--gold);
+            margin-left: 6px;
+        }
+
+        .result-formula {
+            margin-top: 12px;
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        /* Detalhes table */
+        .details-title {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            text-transform: uppercase;
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(46,44,39,0.5);
+            font-family: 'DM Mono', monospace;
+            color: var(--text);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(201,168,76,0.04); }
+
+        /* Error */
+        .error {
+            background: rgba(184,92,56,0.12);
+            border: 1px solid rgba(184,92,56,0.3);
+            border-radius: 10px;
+            padding: 14px 18px;
+            color: #e07a5f;
+            font-size: 13px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .error.visible { display: block; }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+            font-size: 13px;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .loading.visible { display: block; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .loading span { animation: pulse 1.2s ease infinite; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="header-eyebrow">Sistema de Cálculo</div>
+        <h1>Calculadora de<br><span>Materiais</span> para Obra</h1>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('fundacao')">Volume de Concreto</button>
+        <button class="tab" onclick="switchTab('paredes')">Quantidade de Tijolos</button>
+    </div>
+
+    <!-- FUNDAÇÃO -->
+    <div class="panel active" id="panel-fundacao">
+        <div class="section-label">Etapa 2 — Fundação / Viga Baldrame</div>
+
+        <div class="card">
+            <div class="card-title">Dimensões da Viga</div>
+            <div class="grid-2">
+                <div class="field">
+                    <label>Largura da Viga (m)</label>
+                    <input type="number" id="f-largura" step="0.01" placeholder="ex: 0.20">
+                </div>
+                <div class="field">
+                    <label>Altura da Viga (m)</label>
+                    <input type="number" id="f-altura" step="0.01" placeholder="ex: 0.30">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Arestas (Paredes)</div>
+            <div class="arestas-list" id="f-arestas"></div>
+            <button class="btn-add" onclick="addAresta('f')">+ Adicionar Parede</button>
+        </div>
+
+        <button class="btn-calc" onclick="calcularFundacao()">Calcular Volume de Concreto</button>
+
+        <div class="loading" id="f-loading"><span>Calculando...</span></div>
+        <div class="error" id="f-error"></div>
+
+        <div class="result" id="f-result">
+            <div class="result-hero">
+                <div class="result-label">Volume Total de Concreto</div>
+                <div class="result-value" id="f-total">—<span class="result-unit">m³</span></div>
+                <div class="result-formula" id="f-formula"></div>
+            </div>
+            <div class="card">
+                <div class="details-title">Detalhamento por Parede</div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Parede</th>
+                        <th>Comprimento</th>
+                        <th>Largura</th>
+                        <th>Altura</th>
+                        <th>Volume</th>
+                    </tr>
+                    </thead>
+                    <tbody id="f-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAREDES -->
+    <div class="panel" id="panel-paredes">
+        <div class="section-label">Etapa 3 — Quantidade de Tijolos</div>
+
+        <div class="card">
+            <div class="card-title">Dimensões do Tijolo</div>
+            <div class="grid-3">
+                <div class="field">
+                    <label>Comprimento (m)</label>
+                    <input type="number" id="p-comp-tijolo" step="0.001" placeholder="ex: 0.19">
+                </div>
+                <div class="field">
+                    <label>Altura (m)</label>
+                    <input type="number" id="p-alt-tijolo" step="0.001" placeholder="ex: 0.09">
+                </div>
+                <div class="field">
+                    <label>Fator Desperdício</label>
+                    <input type="number" id="p-fator" step="0.01" placeholder="ex: 1.10">
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Arestas (Paredes)</div>
+            <div class="arestas-list" id="p-arestas"></div>
+            <button class="btn-add" onclick="addAresta('p')">+ Adicionar Parede</button>
+        </div>
+
+        <button class="btn-calc" onclick="calcularParedes()">Calcular Tijolos</button>
+
+        <div class="loading" id="p-loading"><span>Calculando...</span></div>
+        <div class="error" id="p-error"></div>
+
+        <div class="result" id="p-result">
+            <div class="result-hero">
+                <div class="result-label">Total de Tijolos Necessários</div>
+                <div class="result-value" id="p-total">—<span class="result-unit">un</span></div>
+                <div class="result-formula" id="p-formula"></div>
+            </div>
+            <div class="card">
+                <div class="details-title">Detalhamento por Parede</div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Parede</th>
+                        <th>Área Total</th>
+                        <th>Desconto</th>
+                        <th>Área Líquida</th>
+                        <th>Tijolos</th>
+                    </tr>
+                    </thead>
+                    <tbody id="p-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let fCount = 0, pCount = 0;
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab').forEach((t, i) => {
+            t.classList.toggle('active', (i === 0 && tab === 'fundacao') || (i === 1 && tab === 'paredes'));
+        });
+        document.getElementById('panel-fundacao').classList.toggle('active', tab === 'fundacao');
+        document.getElementById('panel-paredes').classList.toggle('active', tab === 'paredes');
+    }
+
+    function addAresta(prefix) {
+        const count = prefix === 'f' ? ++fCount : ++pCount;
+        const list = document.getElementById(prefix + '-arestas');
+
+        const div = document.createElement('div');
+        div.className = 'aresta-item';
+        div.id = prefix + '-aresta-' + count;
+
+        const extraFields = prefix === 'p' ? `
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" onchange="toggleAbertura(this, '${prefix}-janela-${count}')"> Janela
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" onchange="toggleAbertura(this, '${prefix}-porta-${count}')"> Porta
+        </label>
+      </div>
+      <div class="abertura-fields" id="${prefix}-janela-${count}">
+        <div class="field"><label>Larg. Janela (m)</label><input type="number" id="${prefix}-lj-${count}" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Alt. Janela (m)</label><input type="number" id="${prefix}-aj-${count}" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="abertura-fields" id="${prefix}-porta-${count}">
+        <div class="field"><label>Larg. Porta (m)</label><input type="number" id="${prefix}-lp-${count}" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Alt. Porta (m)</label><input type="number" id="${prefix}-ap-${count}" step="0.01" placeholder="0.00"></div>
+      </div>
+    ` : '';
+
+        const alturaField = prefix === 'p' ? `
+      <div class="field"><label>Altura da Parede (m)</label><input type="number" id="${prefix}-ha-${count}" step="0.01" placeholder="ex: 3.00"></div>
+    ` : '';
+
+        div.innerHTML = `
+      <div class="aresta-header">
+        <span class="aresta-num">PAREDE #${count}</span>
+        <button class="btn-remove" onclick="removeAresta('${prefix}-aresta-${count}')">remover</button>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Nome</label><input type="text" id="${prefix}-nome-${count}" placeholder="ex: Parede Norte"></div>
+        <div class="field"><label>Comprimento (m)</label><input type="number" id="${prefix}-comp-${count}" step="0.01" placeholder="ex: 5.00"></div>
+      </div>
+      ${alturaField}
+      ${extraFields}
+    `;
+
+        list.appendChild(div);
+    }
+
+    function removeAresta(id) {
+        document.getElementById(id)?.remove();
+    }
+
+    function toggleAbertura(cb, id) {
+        document.getElementById(id)?.classList.toggle('visible', cb.checked);
+    }
+
+    function getVal(id) { return parseFloat(document.getElementById(id)?.value) || null; }
+    function getStr(id) { return document.getElementById(id)?.value?.trim() || ''; }
+    function getCheck(id) { return document.getElementById(id)?.checked || false; }
+
+    async function calcularFundacao() {
+        hideResult('f');
+        const largura = getVal('f-largura');
+        const altura = getVal('f-altura');
+        if (!largura || !altura) return showError('f', 'Preencha largura e altura da viga.');
+
+        const arestas = [];
+        document.querySelectorAll('[id^="f-aresta-"]').forEach(el => {
+            const n = el.id.split('-')[2];
+            const nome = getStr('f-nome-' + n) || ('Parede ' + n);
+            const comprimento = getVal('f-comp-' + n);
+            if (comprimento) arestas.push({ nome, comprimento });
+        });
+
+        if (!arestas.length) return showError('f', 'Adicione pelo menos uma parede.');
+
+        setLoading('f', true);
+        try {
+            const res = await fetch('/api/fundacao/concreto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ arestas, larguraViga: largura, alturaViga: altura })
+            });
+            if (!res.ok) throw new Error('Erro na API: ' + res.status);
+            const data = await res.json();
+
+            document.getElementById('f-total').innerHTML = data.volumeTotalM3 + '<span class="result-unit">m³</span>';
+            document.getElementById('f-formula').textContent = data.formula;
+
+            const tbody = document.getElementById('f-tbody');
+            tbody.innerHTML = '';
+            data.detalhes.forEach(d => {
+                tbody.innerHTML += `<tr>
+          <td>${d.nomeAresta}</td>
+          <td>${d.comprimento} m</td>
+          <td>${d.largura} m</td>
+          <td>${d.altura} m</td>
+          <td>${d.volume} m³</td>
+        </tr>`;
+            });
+
+            document.getElementById('f-result').classList.add('visible');
+        } catch(e) {
+            showError('f', 'Não foi possível conectar na API. Verifique se o servidor está rodando em localhost:8080.');
+        } finally {
+            setLoading('f', false);
+        }
+    }
+
+    async function calcularParedes() {
+        hideResult('p');
+        const compTijolo = getVal('p-comp-tijolo');
+        const altTijolo = getVal('p-alt-tijolo');
+        if (!compTijolo || !altTijolo) return showError('p', 'Preencha as dimensões do tijolo.');
+
+        const fator = getVal('p-fator');
+        const arestas = [];
+
+        document.querySelectorAll('[id^="p-aresta-"]').forEach(el => {
+            const n = el.id.split('-')[2];
+            const nome = getStr('p-nome-' + n) || ('Parede ' + n);
+            const comprimento = getVal('p-comp-' + n);
+            const altura = getVal('p-ha-' + n);
+            if (!comprimento || !altura) return;
+
+            const possuiJanela = getCheck('p-aresta-' + n + ' input[type=checkbox]:first-of-type') ||
+                document.getElementById('p-janela-' + n)?.classList.contains('visible');
+            const possuiPorta = document.getElementById('p-porta-' + n)?.classList.contains('visible');
+
+            const obj = { nome, comprimento, altura, possuiJanela, possuiPorta };
+            if (possuiJanela) { obj.larguraJanela = getVal('p-lj-' + n); obj.alturaJanela = getVal('p-aj-' + n); }
+            if (possuiPorta) { obj.larguraPorta = getVal('p-lp-' + n); obj.alturaPorta = getVal('p-ap-' + n); }
+            arestas.push(obj);
+        });
+
+        if (!arestas.length) return showError('p', 'Adicione pelo menos uma parede com comprimento e altura.');
+
+        setLoading('p', true);
+        try {
+            const res = await fetch('/api/paredes/tijolos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ arestas, comprimentoTijolo: compTijolo, alturaTijolo: altTijolo, fatorDesperdicio: fator || 1.10 })
+            });
+            if (!res.ok) throw new Error('Erro: ' + res.status);
+            const data = await res.json();
+
+            document.getElementById('p-total').innerHTML = data.totalTijolos + '<span class="result-unit">un</span>';
+            document.getElementById('p-formula').textContent = data.formula;
+
+            const tbody = document.getElementById('p-tbody');
+            tbody.innerHTML = '';
+            data.detalhes.forEach(d => {
+                const areaTotal = (d.comprimento * d.altura).toFixed(3);
+                tbody.innerHTML += `<tr>
+          <td>${d.nomeAresta}</td>
+          <td>${areaTotal} m²</td>
+          <td>${d.areaDesconto} m²</td>
+          <td>${d.areaLiquida} m²</td>
+          <td>${d.tijolosPorParede} un</td>
+        </tr>`;
+            });
+
+            document.getElementById('p-result').classList.add('visible');
+        } catch(e) {
+            showError('p', 'Não foi possível conectar na API. Verifique se o servidor está rodando em localhost:8080.');
+        } finally {
+            setLoading('p', false);
+        }
+    }
+
+    function showError(prefix, msg) {
+        const el = document.getElementById(prefix + '-error');
+        el.textContent = msg;
+        el.classList.add('visible');
+    }
+
+    function hideResult(prefix) {
+        document.getElementById(prefix + '-result').classList.remove('visible');
+        document.getElementById(prefix + '-error').classList.remove('visible');
+    }
+
+    function setLoading(prefix, show) {
+        document.getElementById(prefix + '-loading').classList.toggle('visible', show);
+    }
+
+    // Adiciona uma aresta inicial em cada aba
+    addAresta('f');
+    addAresta('p');
+</script>
+</body>
+</html>
