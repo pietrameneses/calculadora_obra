@@ -508,7 +508,7 @@
 
         <div class="card">
             <div class="card-title">Dimensões do Tijolo</div>
-            <div class="grid-3">
+            <div class="grid-2">
                 <div class="field">
                     <label>Comprimento (m)</label>
                     <input type="number" id="p-comp-tijolo" step="0.001" placeholder="ex: 0.19">
@@ -516,6 +516,10 @@
                 <div class="field">
                     <label>Altura (m)</label>
                     <input type="number" id="p-alt-tijolo" step="0.001" placeholder="ex: 0.09">
+                </div>
+                <div class="field">
+                    <label>Largura (m)</label>
+                    <input type="number" id="p-larg-tijolo" step="0.001" placeholder="ex: 0.09">
                 </div>
                 <div class="field">
                     <label>Fator Desperdício</label>
@@ -709,10 +713,11 @@
 
         setLoading('p', true);
         try {
+            const largTijolo = getVal('p-larg-tijolo');
             const res = await fetch('/api/paredes/tijolos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ arestas, comprimentoTijolo: compTijolo, alturaTijolo: altTijolo, fatorDesperdicio: fator || 1.10 })
+                body: JSON.stringify({ arestas, comprimentoTijolo: compTijolo, alturaTijolo: altTijolo, larguraTijolo: largTijolo, fatorDesperdicio: fator || 1.10 })
             });
             if (!res.ok) throw new Error('Erro: ' + res.status);
             const data = await res.json();
