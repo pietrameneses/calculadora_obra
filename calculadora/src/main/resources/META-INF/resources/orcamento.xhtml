@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Calculadora de Obra</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .painel { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        h2 { color: #333; }
+    </style>
+</h:head>
+
+<h:body>
+    <h2>Calculadora de Materiais para Obra Residencial</h2>
+
+    <h:form id="formOrcamento">
+
+        <p:messages autoUpdate="true" showDetail="true"/>
+
+        <div class="painel">
+            <h3>Dados do Cliente</h3>
+            <p:outputLabel value="Nome do Cliente: "/>
+            <p:inputText value="#{orcamentoBean.nomeCliente}" required="true"
+                         placeholder="Digite seu nome"/>
+            <br/><br/>
+
+            <p:outputLabel value="Tipo de Cálculo: "/>
+            <p:selectOneMenu value="#{orcamentoBean.tipoCalculo}">
+                <f:selectItem itemValue="CONCRETO" itemLabel="Volume de Concreto"/>
+                <f:selectItem itemValue="TIJOLOS" itemLabel="Quantidade de Tijolos"/>
+            </p:selectOneMenu>
+        </div>
+
+        <div class="painel">
+            <h3>Dimensões da Viga Baldrame</h3>
+            <p:outputLabel value="Largura da Viga (m): "/>
+            <p:inputText value="#{orcamentoBean.larguraViga}" placeholder="ex: 0.20"/>
+            <br/><br/>
+            <p:outputLabel value="Altura da Viga (m): "/>
+            <p:inputText value="#{orcamentoBean.alturaViga}" placeholder="ex: 0.40"/>
+        </div>
+
+        <div class="painel">
+            <h3>Dimensões do Tijolo</h3>
+            <p:outputLabel value="Comprimento (m): "/>
+            <p:inputText value="#{orcamentoBean.comprimentoTijolo}" placeholder="ex: 0.29"/>
+            <br/><br/>
+            <p:outputLabel value="Altura (m): "/>
+            <p:inputText value="#{orcamentoBean.alturaTijolo}" placeholder="ex: 0.09"/>
+            <br/><br/>
+            <p:outputLabel value="Largura (m): "/>
+            <p:inputText value="#{orcamentoBean.larguraTijolo}" placeholder="ex: 0.14"/>
+            <br/><br/>
+            <p:outputLabel value="Fator Desperdício: "/>
+            <p:inputText value="#{orcamentoBean.fatorDesperdicio}" placeholder="ex: 1.10"/>
+        </div>
+
+        <div class="painel">
+            <h3>Paredes</h3>
+            <p:dataTable value="#{orcamentoBean.arestas}" var="aresta">
+                <p:column headerText="Nome">
+                    <p:inputText value="#{aresta.nome}" placeholder="ex: Parede Norte"/>
+                </p:column>
+                <p:column headerText="Comprimento (m)">
+                    <p:inputText value="#{aresta.comprimento}" placeholder="ex: 5.00"/>
+                </p:column>
+                <p:column headerText="Altura (m)">
+                    <p:inputText value="#{aresta.altura}" placeholder="ex: 2.80"/>
+                </p:column>
+                <p:column headerText="Janela?">
+                    <p:selectBooleanCheckbox value="#{aresta.possuiJanela}"/>
+                </p:column>
+                <p:column headerText="Porta?">
+                    <p:selectBooleanCheckbox value="#{aresta.possuiPorta}"/>
+                </p:column>
+                <p:column headerText="Ação">
+                    <p:commandButton value="Remover" action="#{orcamentoBean.removerAresta(aresta)}"
+                                     update="formOrcamento"/>
+                </p:column>
+            </p:dataTable>
+            <br/>
+            <p:commandButton value="+ Adicionar Parede"
+                             action="#{orcamentoBean.adicionarAresta()}"
+                             update="formOrcamento"/>
+        </div>
+
+        <p:commandButton value="Calcular e Salvar Orçamento"
+                         action="#{orcamentoBean.calcular()}"
+                         update="formOrcamento"/>
+
+        <div id="resultado" class="painel">
+            <h:panelGroup rendered="#{orcamentoBean.orcamentoSalvo != null}">
+                <h3>Resultado</h3>
+                <p>Número do Orçamento: <b>#{orcamentoBean.orcamentoSalvo.numeroOrcamento}</b></p>
+                <p>Cliente: <b>#{orcamentoBean.orcamentoSalvo.nomeCliente}</b></p>
+                <p>Tipo: <b>#{orcamentoBean.orcamentoSalvo.tipo}</b></p>
+                <p>Resultado: <b>#{orcamentoBean.orcamentoSalvo.resultado} #{orcamentoBean.orcamentoSalvo.unidade}</b></p>
+                <p>Fórmula: <i>#{orcamentoBean.orcamentoSalvo.formula}</i></p>
+            </h:panelGroup>
+        </div>
+
+        <div class="painel">
+            <h3>Buscar Orçamentos</h3>
+            <p:outputLabel value="Por nome do cliente: "/>
+            <p:inputText value="#{orcamentoBean.buscaNome}"/>
+            <p:commandButton value="Buscar" action="#{orcamentoBean.buscarPorNome()}"
+                             update="formOrcamento tabelaBusca"/>
+            <br/><br/>
+            <p:outputLabel value="Por número do orçamento: "/>
+            <p:inputText value="#{orcamentoBean.buscaNumero}"/>
+            <p:commandButton value="Buscar" action="#{orcamentoBean.buscarPorNumero()}"
+                             update="formOrcamento tabelaBusca"/>
+        </div>
+
+        <p:dataTable id="tabelaBusca" value="#{orcamentoBean.orcamentosEncontrados}"
+                     var="orc" emptyMessage="Nenhum orçamento encontrado">
+            <p:column headerText="Número">#{orc.numeroOrcamento}</p:column>
+            <p:column headerText="Cliente">#{orc.nomeCliente}</p:column>
+            <p:column headerText="Tipo">#{orc.tipo}</p:column>
+            <p:column headerText="Resultado">#{orc.resultado} #{orc.unidade}</p:column>
+            <p:column headerText="Data">#{orc.dataCriacao}</p:column>
+        </p:dataTable>
+
+    </h:form>
+</h:body>
+</html>
