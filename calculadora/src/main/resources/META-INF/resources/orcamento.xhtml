@@ -102,17 +102,20 @@
             </h:panelGroup>
         </div>
 
+    </h:form>
+
+    <h:form id="formBusca">
         <div class="painel">
             <h3>Buscar Orçamentos</h3>
             <p:outputLabel value="Por nome do cliente: "/>
             <p:inputText value="#{orcamentoBean.buscaNome}"/>
             <p:commandButton value="Buscar" action="#{orcamentoBean.buscarPorNome()}"
-                             update="formOrcamento tabelaBusca"/>
+                             update="formBusca tabelaBusca"/>
             <br/><br/>
             <p:outputLabel value="Por número do orçamento: "/>
             <p:inputText value="#{orcamentoBean.buscaNumero}"/>
             <p:commandButton value="Buscar" action="#{orcamentoBean.buscarPorNumero()}"
-                             update="formOrcamento tabelaBusca"/>
+                             update="formBusca tabelaBusca"/>
         </div>
 
         <p:dataTable id="tabelaBusca" value="#{orcamentoBean.orcamentosEncontrados}"
@@ -123,7 +126,6 @@
             <p:column headerText="Resultado">#{orc.resultado} #{orc.unidade}</p:column>
             <p:column headerText="Data">#{orc.dataCriacao}</p:column>
         </p:dataTable>
-
     </h:form>
 </h:body>
 </html>
